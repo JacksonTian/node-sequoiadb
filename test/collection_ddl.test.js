@@ -25,73 +25,48 @@ describe('Collection DDL', function () {
   var client = common.createClient();
   var collectionSpace;
   var spaceName = 'spacename' + Math.floor(Math.random() * 100);
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(function () {
-      client.createCollectionSpace(spaceName, function (err, space) {
-        expect(err).not.to.be.ok();
-        expect(space).to.be.a(CollectionSpace);
-        expect(space.name).to.be(spaceName);
-        collectionSpace = space;
-        done();
-      });
-    });
+    yield client.ready();
+    var space = yield client.createCollectionSpace(spaceName);
+    expect(space).to.be.a(CollectionSpace);
+    expect(space.name).to.be(spaceName);
+    collectionSpace = space;
   });
 
-  after(function (done) {
-    client.dropCollectionSpace(spaceName, function (err) {
-      expect(err).not.to.be.ok();
-      collectionSpace = null;
-      client.disconnect(done);
-    });
+  after(function* () {
+    yield client.dropCollectionSpace(spaceName);
+    collectionSpace = null;
+    yield client.disconnect();
   });
 
   var collectionName = "collection";
 
-  it('isCollectionExist should ok', function (done) {
-    collectionSpace.isCollectionExist(collectionName, function (err, exist) {
-      expect(err).not.to.be.ok();
-      expect(exist).to.be(false);
-      done();
-    });
+  it('isCollectionExist should ok', function* () {
+    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    expect(exist).to.be(false);
   });
 
-  it('getCollection for inexist should ok', function (done) {
-    collectionSpace.getCollection('inexist', function (err, collection) {
-      expect(err).not.to.be.ok();
-      expect(collection).to.be(null);
-      done();
-    });
+  it('getCollection for inexist should ok', function* () {
+    var collection = yield collectionSpace.getCollection('inexist');
+    expect(collection).to.be(null);
   });
 
-  it('createCollection should ok', function (done) {
-    collectionSpace.createCollection(collectionName, function (err, collection) {
-      expect(err).not.to.be.ok();
-      expect(collection).to.be.a(Collection);
-      collectionSpace.isCollectionExist(collectionName, function (err, exist) {
-        expect(err).not.to.be.ok();
-        expect(exist).to.be(true);
-        done();
-      });
-    });
+  it('createCollection should ok', function* () {
+    var collection = yield collectionSpace.createCollection(collectionName);
+    expect(collection).to.be.a(Collection);
+    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    expect(exist).to.be(true);
   });
 
-  it('getCollection should ok', function (done) {
-    collectionSpace.getCollection(collectionName, function (err, collection) {
-      expect(err).not.to.be.ok();
-      expect(collection).to.be.a(Collection);
-      done();
-    });
+  it('getCollection should ok', function* () {
+    var collection = yield collectionSpace.getCollection(collectionName);
+    expect(collection).to.be.a(Collection);
   });
 
-  it('dropCollection should ok', function (done) {
-    collectionSpace.dropCollection(collectionName, function (err) {
-      expect(err).not.to.be.ok();
-      collectionSpace.isCollectionExist(collectionName, function (err, exist) {
-        expect(err).not.to.be.ok();
-        expect(exist).to.be(false);
-        done();
-      });
-    });
+  it('dropCollection should ok', function* () {
+    yield collectionSpace.dropCollection(collectionName);
+    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    expect(exist).to.be(false);
   });
 });

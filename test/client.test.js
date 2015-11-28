@@ -22,28 +22,22 @@ var common = require('./common');
 describe('Client', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function * () {
     this.timeout(8000);
-    client.ready(done);
+    yield client.ready();
   });
 
-  after(function (done) {
-    client.disconnect(done);
+  after(function * () {
+    yield client.disconnect();
   });
 
-  it('isValid should ok', function (done) {
-    client.isValid(function (err, valid) {
-      expect(err).not.to.be.ok();
-      expect(valid).to.be(true);
-      done();
-    });
+  it('isValid should ok', function * () {
+    var valid = yield client.isValid();
+    expect(valid).to.be(true);
   });
 
-  it('setSessionAttr should ok', function (done) {
+  it('setSessionAttr should ok', function * () {
     var conf = {"PreferedInstance": "m"};
-    client.setSessionAttr(conf, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.setSessionAttr(conf);
   });
 });

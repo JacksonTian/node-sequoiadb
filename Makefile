@@ -7,11 +7,15 @@ COVERALLS = ./node_modules/coveralls/bin/coveralls.js
 
 test:
 	@NODE_ENV=test $(MOCHA) -R $(REPORTER) -t $(TIMEOUT) \
+		--require co-mocha \
 		$(MOCHA_OPTS) \
 		$(TESTS)
 
 test-cov:
-	@$(ISTANBUL) cover --report html $(MOCHA) -- -t $(TIMEOUT) -R spec $(TESTS)
+	@$(ISTANBUL) cover --report html \
+		$(MOCHA) -- -t $(TIMEOUT) \
+		--require co-mocha \
+		-R spec $(TESTS)
 
 test-coveralls:
 	@$(ISTANBUL) cover --report lcovonly $(MOCHA) -- -t $(TIMEOUT) -R spec $(TESTS)
@@ -20,7 +24,7 @@ test-coveralls:
 
 debug:
 	@NODE_ENV=test \
-		node-debug --nodejs --harmony \
+		node-debug \
 		$(MOCHA) \
 		--reporter $(REPORTER) \
 		--timeout $(TIMEOUT) \

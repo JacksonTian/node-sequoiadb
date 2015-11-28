@@ -15,6 +15,7 @@
     "after",
     "afterEach"
   ],
+  "esnext": true,
   "node": true,
   "bitwise": false,
   "curly": true,
