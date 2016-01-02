@@ -19,75 +19,59 @@
 var expect = require('expect.js');
 var common = require('./common');
 var Cursor = require('../lib/cursor');
-var CollectionSpace = require('../lib/collection_space');
 
 describe('CollectionSpace', function () {
   var client = common.createClient();
+  var CollectionSpace = require('../lib/collection_space');
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(done);
+    yield client.ready();
   });
 
-  after(function (done) {
-    client.disconnect(done);
+  after(function* () {
+    yield client.disconnect();
   });
 
   var spaceName = 'spaceName' + Math.floor(Math.random() * 100);
-  it('createCollectionSpace should ok', function (done) {
-    client.createCollectionSpace(spaceName, function (err, space) {
-      expect(err).not.to.be.ok();
-      expect(space).to.be.a(CollectionSpace);
-      expect(space.name).to.be(spaceName);
-      done();
-    });
+  it('createCollectionSpace should ok', function* () {
+    var space = yield client.createCollectionSpace(spaceName);
+    expect(space).to.be.a(CollectionSpace);
+    expect(space.name).to.be(spaceName);
   });
 
-  it('isCollectionSpaceExist should ok', function (done) {
-    client.isCollectionSpaceExist(spaceName, function (err, exist) {
-      expect(err).not.to.be.ok();
-      expect(exist).to.be(true);
-      done();
-    });
+  it('isCollectionSpaceExist should ok', function* () {
+    var exist = yield client.isCollectionSpaceExist(spaceName);
+    expect(exist).to.be(true);
   });
 
-  it('getCollectionSpace should ok', function (done) {
-    client.getCollectionSpace(spaceName, function (err, space) {
-      expect(err).not.to.be.ok();
-      expect(space).to.be.a(CollectionSpace);
-      expect(space.name).to.be(spaceName);
-      done();
-    });
+  it('getCollectionSpace should ok', function* () {
+    var space = yield client.getCollectionSpace(spaceName);
+    expect(space).to.be.a(CollectionSpace);
+    expect(space.name).to.be(spaceName);
   });
 
-  it('getCollectionSpace inexist should ok', function (done) {
-    client.getCollectionSpace('inexist', function (err) {
+  it('getCollectionSpace inexist should ok', function* () {
+    try {
+      client.getCollectionSpace('inexist');
+    } catch (err) {
       expect(err).to.be.ok();
       expect(err.message).to.be('Collection space does not exist');
-      done();
-    });
+      return;
+    }
   });
 
-  it('dropCollectionSpace should ok', function (done) {
-    client.dropCollectionSpace(spaceName, function (err, space) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('dropCollectionSpace should ok', function* () {
+    yield client.dropCollectionSpace(spaceName);
   });
 
-  it('isCollectionSpaceExist should ok', function (done) {
-    client.isCollectionSpaceExist(spaceName, function (err, exist) {
-      expect(err).not.to.be.ok();
-      expect(exist).to.be(false);
-      done();
-    });
+  it('isCollectionSpaceExist should ok', function* () {
+    var exist = yield client.isCollectionSpaceExist(spaceName);
+    expect(exist).to.be(false);
   });
 
-  it('should ok', function (done) {
-    client.getCollectionSpaces(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      expect(cursor).to.be.a(Cursor);
-      done();
-    });
+  it('getCollectionSpaces should ok', function* () {
+    var cursor = yield client.getCollectionSpaces();
+    expect(cursor).to.be.a(Cursor);
   });
 });
