@@ -18,20 +18,31 @@
 
 var Client = require('../lib/client');
 // x86
-var ip = "192.168.20.63";
-var dbpath = "/home/users/lz/database/";
+var ip = '192.168.20.63';
+var dbpath = '/home/users/lz/database/';
 // power pc
 //var ip = "192.168.30.162";
 //var dbpath = "/opt/sequoiadb/database/"
 
-var ip = "123.56.143.17";
+var ip = '123.56.143.17';
 
 exports.createClient = function () {
   return new Client(11810, ip, {
-    user: "",
-    pass: ""
+    user: '',
+    pass: ''
   });
 };
 
 exports.ip = ip;
 exports.dbpath = dbpath;
+
+exports.ensureCollectionSpace = function* (client, spaceName) {
+  var space;
+  try {
+    space = yield client.createCollectionSpace(spaceName);
+  } catch (ex) {
+    space = yield client.getCollectionSpace(spaceName);
+  }
+
+  return space;
+};

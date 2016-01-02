@@ -23,50 +23,49 @@ var CollectionSpace = require('../lib/collection_space');
 describe('Collection DDL', function () {
   var Collection = require('../lib/collection');
   var client = common.createClient();
-  var collectionSpace;
+  var space;
   var spaceName = 'spacename' + Math.floor(Math.random() * 100);
+
   before(function* () {
     this.timeout(8000);
     yield client.ready();
-    var space = yield client.createCollectionSpace(spaceName);
+    space = yield client.createCollectionSpace(spaceName);
     expect(space).to.be.a(CollectionSpace);
     expect(space.name).to.be(spaceName);
-    collectionSpace = space;
   });
 
   after(function* () {
     yield client.dropCollectionSpace(spaceName);
-    collectionSpace = null;
     yield client.disconnect();
   });
 
-  var collectionName = "collection";
+  var collectionName = 'collection';
 
   it('isCollectionExist should ok', function* () {
-    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    var exist = yield space.isCollectionExist(collectionName);
     expect(exist).to.be(false);
   });
 
   it('getCollection for inexist should ok', function* () {
-    var collection = yield collectionSpace.getCollection('inexist');
+    var collection = yield space.getCollection('inexist');
     expect(collection).to.be(null);
   });
 
   it('createCollection should ok', function* () {
-    var collection = yield collectionSpace.createCollection(collectionName);
+    var collection = yield space.createCollection(collectionName);
     expect(collection).to.be.a(Collection);
-    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    var exist = yield space.isCollectionExist(collectionName);
     expect(exist).to.be(true);
   });
 
   it('getCollection should ok', function* () {
-    var collection = yield collectionSpace.getCollection(collectionName);
+    var collection = yield space.getCollection(collectionName);
     expect(collection).to.be.a(Collection);
   });
 
   it('dropCollection should ok', function* () {
-    yield collectionSpace.dropCollection(collectionName);
-    var exist = yield collectionSpace.isCollectionExist(collectionName);
+    yield space.dropCollection(collectionName);
+    var exist = yield space.isCollectionExist(collectionName);
     expect(exist).to.be(false);
   });
 });

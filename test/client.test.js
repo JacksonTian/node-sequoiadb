@@ -37,7 +37,7 @@ describe('Client', function () {
   });
 
   it('setSessionAttr should ok', function * () {
-    var conf = {"PreferedInstance": "m"};
+    var conf = {'PreferedInstance': 'm'};
     yield client.setSessionAttr(conf);
   });
 });

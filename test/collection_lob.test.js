@@ -27,85 +27,52 @@ describe('Collection Lob', function () {
   var collection;
 
   var spaceName = 'foo7';
-  var collectionName = "bar_" + Math.floor(Math.random() * 10);
+  var collectionName = 'bar_' + Math.floor(Math.random() * 10);
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(function () {
-      var createCollection = function (space) {
-        space.createCollection(collectionName, function (err, _collection) {
-          expect(err).not.to.be.ok();
-          expect(_collection).to.be.ok();
-          collection = _collection;
-          done();
-        });
-      };
-      client.createCollectionSpace(spaceName, function (err, space) {
-        if (err) {
-          client.getCollectionSpace(spaceName, function (err, _space) {
-            expect(err).not.to.be.ok();
-            createCollection(_space);
-          });
-        } else {
-          expect(space).to.be.a(CollectionSpace);
-          expect(space.name).to.be(spaceName);
-          createCollection(space);
-        }
-      });
-    });
+    yield client.ready();
+
+    var space = yield common.ensureCollectionSpace(client, spaceName);
+    expect(space).to.be.a(CollectionSpace);
+    expect(space.name).to.be(spaceName);
+
+    collection = yield space.createCollection(collectionName);
+    expect(collection).to.be.ok();
   });
 
-  after(function (done) {
-    client.dropCollectionSpace(spaceName, function (err) {
-      expect(err).not.to.be.ok();
-      client.disconnect(done);
-    });
+  after(function* () {
+    yield client.dropCollectionSpace(spaceName);
+    yield client.disconnect();
   });
 
-  it('getLobs should ok with empty list', function (done) {
-    collection.getLobs(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
-        expect(item).to.be(null);
-        done();
-      });
-    });
+  it('getLobs should ok with empty list', function* () {
+    var cursor = yield collection.getLobs();
+    expect(cursor).to.be.ok();
+    var item = yield cursor.current();
+    expect(item).to.be(null);
   });
 
   var lob;
 
-  it('createLob should ok', function (done) {
-    lob = collection.createLob(function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('createLob should ok', function* () {
+    lob = yield collection.createLob();
   });
 
-  it('Lob.write should ok', function (done) {
-    lob.write(new Buffer("0123456789abcdef"), function (err) {
-      expect(err).not.to.be.ok();
-      expect(Long.fromNumber(16).equals(lob.size)).to.be.ok();
-      done();
-    });
+  it('Lob.write should ok', function* () {
+    yield lob.write(new Buffer('0123456789abcdef'));
+    expect(Long.fromNumber(16).equals(lob.size)).to.be.ok();
   });
 
-  it('Lob.write(bigbuff) should ok', function (done) {
+  it('Lob.write(bigbuff) should ok', function* () {
     this.timeout(25000);
     var bigsize = 1024 * 1024 + 1;
-    lob.write(new Buffer(bigsize), function (err) {
-      expect(err).not.to.be.ok();
-      expect(Long.fromNumber(bigsize + 16).equals(lob.size)).to.be.ok();
-      done();
-    });
+    yield lob.write(new Buffer(bigsize));
+    expect(Long.fromNumber(bigsize + 16).equals(lob.size)).to.be.ok();
   });
 
-  it('Lob.close should ok', function (done) {
-    lob.close(function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('Lob.close should ok', function* () {
+    yield lob.close();
   });
 
   it('Lob.isClosed should ok', function () {
@@ -113,31 +80,22 @@ describe('Collection Lob', function () {
   });
 
   var currentLob;
-  it("set read from master first", function(done){
-    var option = {"PreferedInstance":"M"};
-    client.setSessionAttr(option, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('set read from master first', function* () {
+    var option = {'PreferedInstance': 'M'};
+    yield client.setSessionAttr(option);
   });
 
-  it('Lob.open should ok', function (done) {
-    currentLob = collection.openLob(lob.id, function (err) {
-      expect(err).not.to.be.ok();
-      expect(currentLob.getID()).to.be(currentLob.id);
-      expect(currentLob.getSize()).to.be(currentLob.size);
-      expect(currentLob.getCreateTime()).to.be(currentLob.createTime);
-      done();
-    });
+  it('Lob.open should ok', function* () {
+    currentLob = yield collection.openLob(lob.id);
+    expect(currentLob.getID()).to.be(currentLob.id);
+    expect(currentLob.getSize()).to.be(currentLob.size);
+    expect(currentLob.getCreateTime()).to.be(currentLob.createTime);
   });
 
-  it('Lob.read should ok', function (done) {
-    currentLob.read(16, function (err, buff) {
-      expect(err).not.to.be.ok();
-      expect(Long.fromNumber(16).equals(currentLob.readOffset)).to.be.ok();
-      expect(buff).to.eql(new Buffer("0123456789abcdef"));
-      done();
-    });
+  it('Lob.read should ok', function* () {
+    var buff = yield currentLob.read(16);
+    expect(Long.fromNumber(16).equals(currentLob.readOffset)).to.be.ok();
+    expect(buff).to.eql(new Buffer('0123456789abcdef'));
   });
 
   it('Lob.seek should ok', function () {
@@ -153,49 +111,24 @@ describe('Collection Lob', function () {
     expect(totalSize.equals(currentLob.readOffset)).to.be.ok();
   });
 
-  it('Lob.close should ok', function (done) {
-    currentLob.close(function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('Lob.close should ok', function* () {
+    yield currentLob.close();
   });
 
-  it("set read from master first", function(done){
-    var option = {"PreferedInstance":"M"};
-    client.setSessionAttr(option, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('getLobs should ok with item', function* () {
+    var option = {'PreferedInstance':'M'};
+    yield client.setSessionAttr(option);
+    var cursor = yield collection.getLobs();
+    expect(cursor).to.be.ok();
+    var item = yield cursor.current();
+    expect(item).to.be.ok();
   });
 
- it('getLobs should ok with item', function (done) {
-    collection.getLobs(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
-        expect(item).to.be.ok();
-        done();
-      });
-    });
-  });
-
-  it('removeLob should ok', function (done) {
-    collection.removeLob(lob.id, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
-  });
-
-  it('getLobs should ok with empty', function (done) {
-    collection.getLobs(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
-        expect(item).to.be(null);
-        done();
-      });
-    });
+  it('removeLob should ok', function* () {
+    yield collection.removeLob(lob.id);
+    var cursor = yield collection.getLobs();
+    expect(cursor).to.be.ok();
+    var item = yield cursor.current();
+    expect(item).to.be(null);
   });
 });

@@ -26,109 +26,65 @@ describe('Collection index', function () {
   var collection;
 
   var spaceName = 'foo6';
-  var collectionName = "bar5";
+  var collectionName = 'bar5';
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(function () {
-      var createCollection = function (space) {
-        space.createCollection(collectionName, function (err, _collection) {
-          expect(err).not.to.be.ok();
-          expect(_collection).to.be.a(Collection);
-          collection = _collection;
-          done();
-        });
-      };
-      client.createCollectionSpace(spaceName, function (err, space) {
-        if (err) {
-          client.getCollectionSpace(spaceName, function (err, _space) {
-            expect(err).not.to.be.ok();
-            createCollection(_space);
-          });
-        } else {
-          expect(space).to.be.a(CollectionSpace);
-          expect(space.name).to.be(spaceName);
-          createCollection(space);
-        }
-      });
-    });
+
+    yield client.ready();
+
+    var space = yield common.ensureCollectionSpace(client, spaceName);
+    expect(space).to.be.a(CollectionSpace);
+    expect(space.name).to.be(spaceName);
+
+    collection = yield space.createCollection(collectionName);
+    expect(collection).to.be.a(Collection);
   });
 
-  after(function (done) {
-    client.dropCollectionSpace(spaceName, function (err) {
-      expect(err).not.to.be.ok();
-      client.disconnect(done);
-    });
+  after(function* () {
+    yield client.dropCollectionSpace(spaceName);
+    yield client.disconnect();
   });
 
-  it("set read from master first", function(done){
-    var option = {"PreferedInstance":"M"};
-    client.setSessionAttr(option, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('set read from master first', function* () {
+    var option = {'PreferedInstance':'M'};
+    yield client.setSessionAttr(option);
   });
 
-  it('createIndex should ok', function (done) {
+  it('createIndex should ok', function* () {
     var key = {
-      "Last Name": 1,
-      "First Name": 1
+      'Last Name': 1,
+      'First Name': 1
     };
-    collection.createIndex("index name", key, false, false, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield collection.createIndex('index name', key, false, false);
+    var cursor = yield collection.getIndex('index name');
+    var index = yield cursor.current();
+    expect(index.IndexDef.name).to.be('index name');
+    expect(index.IndexDef.key).to.eql({ 'Last Name': 1, 'First Name': 1 });
   });
 
-  it('getIndex should ok', function (done) {
-    collection.getIndex("index name", function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, index) {
-        expect(index.IndexDef.name).to.be('index name');
-        done();
-      });
-    });
+  it('getIndex without name should ok', function* () {
+    var cursor = yield collection.getIndex();
+    var idIndex = yield cursor.next();
+    expect(idIndex.IndexDef.name).to.be('$id');
+    var index = yield cursor.next();
+    expect(index.IndexDef.name).to.be('index name');
   });
 
-  it('getIndex without name should ok', function (done) {
-    collection.getIndex(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.next(function (err, index) {
-        expect(index.IndexDef.name).to.be('$id');
-        cursor.next(function (err, index) {
-          expect(index.IndexDef.name).to.be('index name');
-          done();
-        });
-      });
-    });
+  it('getIndexes should ok', function* () {
+    var cursor = yield collection.getIndexes();
+    var index = yield cursor.next();
+    expect(index.IndexDef.name).to.be('$id');
+    index = yield cursor.next();
+    expect(index.IndexDef.name).to.be('index name');
   });
 
-  it('getIndexes should ok', function (done) {
-    collection.getIndexes(function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.next(function (err, index) {
-        expect(index.IndexDef.name).to.be('$id');
-        cursor.next(function (err, index) {
-          expect(index.IndexDef.name).to.be('index name');
-          done();
-        });
-      });
-    });
-  });
-
-  it('dropIndex should ok', function (done) {
-    collection.dropIndex("index name", function (err) {
-      expect(err).not.to.be.ok();
-      collection.getIndexes(function (err, cursor) {
-        expect(err).not.to.be.ok();
-        cursor.next(function (err, index) {
-          expect(index.IndexDef.name).to.be('$id');
-          cursor.next(function (err, index) {
-            expect(index).to.be(null);
-            done();
-          });
-        });
-      });
-    });
+  it('dropIndex should ok', function* () {
+    yield collection.dropIndex('index name');
+    var cursor = yield collection.getIndexes();
+    var index = yield cursor.next();
+    expect(index.IndexDef.name).to.be('$id');
+    index = yield cursor.next();
+    expect(index).to.be(null);
   });
 });
