@@ -98,7 +98,7 @@ client.getCollectionSpaces(function (err, cursor) {
 Get current item:
 
 ```js
-cursor.current(function (err, item) {
+var item = yield cursor.current();
   // TODO
 });
 ```

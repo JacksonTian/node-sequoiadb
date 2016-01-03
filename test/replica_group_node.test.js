@@ -26,81 +26,81 @@ describe('Replica Group Node', function () {
   var groupname = 'for_node';
   var group;
   var node;
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(function () {
       client.createReplicaGroup(groupname, function (err, _group) {
-        expect(err).not.to.be.ok();
+
         group = _group;
-        done();
+
       });
     });
   });
 
-  after(function (done) {
+  after(function* () {
     this.timeout(8000);
     client.removeReplicaGroup(groupname, function (err) {
-      expect(err).not.to.be.ok();
+
       client.disconnect(done);
     });
   });
 
-  it('getDetail should ok', function (done) {
+  it('getDetail should ok', function* () {
     group.getDetail(function (err, detail) {
-      expect(err).not.to.be.ok();
+
       expect(detail.GroupName).to.be(groupname);
       expect(detail.Group.length).to.be(0);
-      done();
+
     });
   });
 
-  it('getNodeCount should ok', function (done) {
+  it('getNodeCount should ok', function* () {
     group.getNodeCount(function (err, count) {
-      expect(err).not.to.be.ok();
+
       expect(count).to.be(0);
-      done();
+
     });
   });
 
-  it('createNode should ok', function (done) {
+  it('createNode should ok', function* () {
     var host = common.ip;
     var port = 11880;
     var dbpath = common.dbpath + 'data/11880';
     group.createNode(host, port, dbpath, {}, function (err, _node) {
-      expect(err).not.to.be.ok();
+
       node = _node;
       expect(_node.nodename).to.be(common.ip + ':11880');
-      done();
+
     });
   });
 
-  it('getNodeByName should ok', function (done) {
+  it('getNodeByName should ok', function* () {
     var name = common.ip + ':11880';
     group.getNodeByName(name, function (err, node) {
-      expect(err).not.to.be.ok();
+
       expect(node.nodename).to.be(common.ip + ':11880');
-      done();
+
     });
   });
 
-  it('node.getStatus should ok', function (done) {
+  it('node.getStatus should ok', function* () {
     node.getStatus(function (err, status) {
-      expect(err).not.to.be.ok();
+
       expect(status).to.be(constants.NodeStatus.SDB_NODE_ACTIVE);
-      done();
+
     });
   });
 
-  it('node.start should ok', function (done) {
+  it('node.start should ok', function* () {
     this.timeout(20000);
     node.start(function (err, status) {
-      expect(err).not.to.be.ok();
+
       expect(status).to.be(true);
-      done();
+
     });
   });
 
-  it('node.connect should ok', function (done) {
+  it('node.connect should ok', function* () {
     this.timeout(8000);
     var conn = node.connect("", "");
     conn.on('error', done);
@@ -109,65 +109,65 @@ describe('Replica Group Node', function () {
     });
   });
 
-  it('node.stop should ok', function (done) {
+  it('node.stop should ok', function* () {
     this.timeout(8000);
     node.stop(function (err, status) {
-      expect(err).not.to.be.ok();
+
       expect(status).to.be(true);
-      done();
+
     });
   });
-  it('removeNode should ok', function (done) {
+  it('removeNode should ok', function* () {
     var host = common.ip;
     group.removeNode(host, 11880, {}, function (err) {
       expect(err).to.be.ok();
-      done();
+
     });
   });
 
-  it('getNodeCount should be 1', function (done) {
+  it('getNodeCount should be 1', function* () {
     group.getNodeCount(function (err, count) {
-      expect(err).not.to.be.ok();
+
       expect(count).to.be(1);
-      done();
+
     });
   });
 
-  it('start Group should ok', function (done) {
+  it('start Group should ok', function* () {
     this.timeout(20000);
     group.start(function (err, ok) {
-      expect(err).not.to.be.ok();
+
       expect(ok).to.be(true);
-      done();
+
     });
   });
 
-  it('stop Group should ok', function (done) {
+  it('stop Group should ok', function* () {
     this.timeout(20000);
     group.stop(function (err, ok) {
-      expect(err).not.to.be.ok();
+
       expect(ok).to.be(true);
-      done();
+
     });
   });
 
-  it('getMaster should ok', function (done) {
+  it('getMaster should ok', function* () {
     group.getMaster(function (err, node) {
-      expect(err).not.to.be.ok();
+
       expect(node).to.be.ok();
       expect(node.nodename).to.be(common.ip + ':11880');
       expect(node.group.name).to.be('for_node');
-      done();
+
     });
   });
 
-  it('getSlave should ok', function (done) {
+  it('getSlave should ok', function* () {
     group.getSlave(function (err, node) {
-      expect(err).not.to.be.ok();
+
       expect(node).to.be.ok();
       expect(node.nodename).to.be(common.ip + ':11880');
       expect(node.group.name).to.be('for_node');
-      done();
+
     });
   });
 });

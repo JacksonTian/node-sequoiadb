@@ -22,39 +22,39 @@ var common = require('./common');
 describe('Connection Transaction', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function* () {
     client.ready(done);
   });
 
-  after(function (done) {
+  after(function* () {
     client.disconnect(done);
   });
 
-  it('beginTransaction should ok', function (done) {
+  it('beginTransaction should ok', function* () {
     client.beginTransaction(function (err) {
-      expect(err).to.not.be.ok();
-      done();
+
+
     });
   });
 
-  it('commitTransaction should ok', function (done) {
+  it('commitTransaction should ok', function* () {
     client.commitTransaction(function (err) {
-      expect(err).to.not.be.ok();
-      done();
+
+
     });
   });
 
-  it('beginTransaction should ok', function (done) {
+  it('beginTransaction should ok', function* () {
     client.beginTransaction(function (err) {
-      expect(err).to.not.be.ok();
-      done();
+
+
     });
   });
 
-  it('rollbackTransaction should ok', function (done) {
+  it('rollbackTransaction should ok', function* () {
     client.rollbackTransaction(function (err) {
-      expect(err).to.not.be.ok();
-      done();
+
+
     });
   });
 });

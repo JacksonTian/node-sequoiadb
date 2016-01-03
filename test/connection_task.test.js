@@ -23,8 +23,8 @@ var Node = require('../lib/node');
 
 describe('Connection Task', function () {
   var client = common.createClient();
-  var _collection;
-  var _space;
+  var collection;
+  var space;
 
   var source = 'source1';
   var dest = 'dest1';
@@ -33,182 +33,121 @@ describe('Connection Task', function () {
   var dstGroup;
 
   var spaceName = 'foox';
-  var collectionName = "barx";
+  var collectionName = 'barx';
 
-  before(function (done) {
-    client.ready(done);
+  before(function* () {
+    yield client.ready();
   });
 
-  after(function (done) {
-    client.disconnect(done);
+  after(function* () {
+    yield client.disconnect();
   });
 
-  var task;
-  it('getTasks should ok', function (done) {
-    client.getTasks({}, {}, {}, {}, function (err, cursor) {
-      expect(err).to.not.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        // expect(item).to.be.ok();
-        task = item;
-        done();
-      });
-    });
+  it('getTasks should ok', function* () {
+    var cursor = yield client.getTasks({}, {}, {}, {});
+    var item = yield cursor.current();
+    expect(item).to.be.ok();
   });
 
-  it('create collection space should ok', function (done) {
-    client.createCollectionSpace(spaceName, function (err, space) {
-      expect(err).not.to.be.ok();
-      expect(space).not.to.be(null);
-      expect(space.name).to.be(spaceName);
-      _space = space;
-      done();
-    });
+  it('create collection space should ok', function* () {
+    space = yield client.createCollectionSpace(spaceName);
+    expect(space).not.to.be(null);
+    expect(space.name).to.be(spaceName);
   });
 
-  it('create source group should ok', function (done) {
-    client.createReplicaGroup(source, function (err, group) {
-      expect(err).not.to.be.ok();
-      expect(group).not.to.be(null);
-      srcGroup = group;
-      done();
-    });
+  it('create source group should ok', function* () {
+    srcGroup = yield client.createReplicaGroup(source);
+    expect(srcGroup).not.to.be(null);
   });
 
-  it('source group create node should ok', function (done) {
+  it('source group create node should ok', function* () {
     this.timeout(20000);
     var host = common.ip;
     var port = 22000;
     var dbpath = common.dbpath + 'data/22000';
-    srcGroup.createNode(host, port, dbpath, {}, function (err, _){
-      expect(err).not.to.be.ok();
-      expect(_).to.be.a(Node);
-
-      client.activateReplicaGroup(source, function (err, _) {
-        expect(err).not.to.be.ok();
-        done();
-      });
-    });
+    var node = yield srcGroup.createNode(host, port, dbpath, {});
+    expect(node).to.be.a(Node);
+    yield client.activateReplicaGroup(source);
   });
 
-  it('create collection on source group should ok', function (done){
+  it('create collection on source group should ok', function* (){
     var options = {
-      ShardingKey: {"age": 1},
-      ShardingType: "hash",
+      ShardingKey: {'age': 1},
+      ShardingType: 'hash',
       Partition: 4096,
       Group: source
     };
-    _space.createCollection(collectionName, options, function (err, collection) {
-      expect(err).not.to.be.ok();
-      expect(collection).to.be.a(Collection);
-      _collection = collection;
-      done();
-    });
+
+    collection = space.createCollection(collectionName, options);
+    expect(collection).to.be.a(Collection);
   });
 
-  it('create dest group should ok', function (done){
-    client.createReplicaGroup(dest, function (err, group){
-      expect(err).not.to.be.ok();
-      expect(group).not.to.be(null);
-      dstGroup = group;
-      done();
-    });
+  it('create dest group should ok', function* (){
+    var dstGroup = yield client.createReplicaGroup(dest);
+    expect(dstGroup).not.to.be(null);
   });
 
-  it('create node for dest group should ok', function (done) {
+  it('create node for dest group should ok', function* () {
     this.timeout(8000);
     var host = common.ip;
     var port = 22010;
     var dbpath = common.dbpath + 'data/22010';
-    dstGroup.createNode(host, port, dbpath, {}, function (err, _){
-      expect(err).not.to.be.ok();
-      expect(_).to.be.a(Node);
-      done();
-    });
+    var node = yield dstGroup.createNode(host, port, dbpath, {});
+    expect(node).to.be.a(Node);
   });
 
-  it('wait for 10s', function(done) {
+  it('wait for 10s', function* () {
     this.timeout(11000);
-    setTimeout(function () {
-      done();
-    }, 10000);
+    yield common.sleep(10000);
   });
 
-  it('activate dest group should ok', function (done) {
+  it('activate dest group should ok', function* () {
     this.timeout(20000);
-    client.activateReplicaGroup(dest, function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    client.activateReplicaGroup(dest);
   });
 
   var taskID;
-  it('get task id should ok', function (done) {
+  it('get task id should ok', function* () {
     this.timeout(8000);
     var splitCondition = {age: 10};
     var splitEndCondition = {age: 30};
-    _collection.splitAsync(source, dest, splitCondition, splitEndCondition, function (err, id) {
-      expect(err).not.to.be.ok();
-      taskID = id;
-      done();
-    });
+    taskID = yield collection.splitAsync(source, dest, splitCondition, splitEndCondition);
   });
 
-  it('waitTasks should ok', function (done) {
+  it('waitTasks should ok', function* () {
     this.timeout(8000);
     var taskIds = [taskID];
-    client.waitTasks(taskIds, function (err) {
-      expect(err).to.not.be.ok();
-      done();
-    });
+    yield client.waitTasks(taskIds);
   });
 
-  it('get another task id should ok', function (done) {
+  it('get another task id should ok', function* () {
     this.timeout(8000);
     var splitCondition = {age: 50};
     var splitEndCondition = {age: 70};
-    _collection.splitAsync(source, dest, splitCondition, splitEndCondition, function (err, id) {
-      expect(err).not.to.be.ok();
-      taskID = id;
-      done();
-    });
+    taskID = yield collection.splitAsync(source, dest, splitCondition, splitEndCondition);
   });
 
-  it('cancelTask should ok', function (done) {
+  it('cancelTask should ok', function* () {
     this.timeout(10000);
-    client.cancelTask(taskID, true, function (err) {
-      expect(err).to.not.be.ok();
-      done();
-    });
+    yield client.cancelTask(taskID, true);
   });
 
-  it('wait for 10s', function(done) {
+  it('wait for 10s', function* () {
     this.timeout(11000);
-    setTimeout(function () {
-      done();
-    }, 10000);
+    yield common.sleep(10000);
   });
 
-  it('drop collection space should ok', function (done){
-    client.dropCollectionSpace(spaceName, function (err){
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('drop collection space should ok', function* (){
+    yield client.dropCollectionSpace(spaceName);
   });
 
-  it('remove source group should ok', function (done){
+  it('remove source group should ok', function* (){
     this.timeout(10000);
-    client.removeReplicaGroup(source, function (err, _){
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.removeReplicaGroup(source);
   });
 
-  it('remove dest group should ok', function (done) {
+  it('remove dest group should ok', function* () {
     this.timeout(10000);
-    client.removeReplicaGroup(dest, function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.removeReplicaGroup(dest);
   });
 });

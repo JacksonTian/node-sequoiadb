@@ -22,30 +22,25 @@ var common = require('./common');
 describe('Connection Backup', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(done);
+    yield client.ready();
   });
 
-  after(function (done) {
-    client.disconnect(done);
+  after(function* () {
+    yield client.disconnect();
   });
 
-  it('getBackups should ok', function (done) {
+  it('getBackups should ok', function* () {
     var options = {
       // "Path": "/opt/sequoiadb/backup"
     };
-    client.getBackups(options, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        expect(item).to.be(null);
-        done();
-      });
-    });
+    var cursor = yield client.getBackups(options, null, null, null);
+    var item = yield cursor.current();
+    expect(item).to.be(null);
   });
 
-  it('backupOffline should ok', function (done) {
+  it('backupOffline should ok', function* () {
     var options = {
       // "GroupName": ["rgName1", "rgName2"],
       // "Path": "/opt/sequoiadb/backup",
@@ -54,45 +49,27 @@ describe('Connection Backup', function () {
       // "EnsureInc": true,
       // "OverWrite": true
     };
-    client.backupOffline(options, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.backupOffline(options);
   });
 
-  var _item;
-  it('getBackups should ok with items', function (done) {
+  it('getBackups should ok with items', function* () {
     var options = {};
-    client.getBackups(options, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        expect(item).to.be.ok();
-        _item = item;
-        done();
-      });
-    });
+    var cursor = yield client.getBackups(options, null, null, null);
+    var item = yield cursor.current();
+    expect(item).to.be.ok();
   });
 
-  it('removeBackup should ok with items', function (done) {
+  it('removeBackup should ok with items', function* () {
     var options = {};
-    client.removeBackup(options, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.removeBackup(options);
   });
 
-  it('getBackups should ok with zero', function (done) {
+  it('getBackups should ok with zero', function* () {
     var options = {
       // "Path": "/opt/sequoiadb/backup"
     };
-    client.getBackups(options, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        expect(item).to.be(null);
-        done();
-      });
-    });
+    var cursor = yield client.getBackups(options, null, null, null);
+    var item = yield cursor.current();
+    expect(item).to.be(null);
   });
 });

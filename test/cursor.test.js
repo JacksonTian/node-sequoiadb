@@ -24,68 +24,68 @@ describe('/lib/cursor', function () {
   var client = common.createClient();
   var cursor;
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(function () {
       client.getCollectionSpaces(function (err, _cursor) {
-        expect(err).not.to.be.ok();
+
         expect(_cursor).to.be.a(Cursor);
         cursor = _cursor;
-        done();
+
       });
     });
   });
 
-  after(function (done) {
+  after(function* () {
     client.disconnect(done);
   });
 
-  it('next should ok', function (done) {
+  it('next should ok', function* () {
     expect(cursor.isClosed).to.be(false);
     cursor.next(function (err, item) {
-      expect(err).not.to.be.ok();
+
       if (item) {
         expect(item.Name).to.be.ok();
       }
-      done();
+
     });
   });
 
-  it('current should ok', function (done) {
+  it('current should ok', function* () {
     expect(cursor.isClosed).to.be(false);
-    cursor.current(function (err, item) {
-      expect(err).not.to.be.ok();
+    var item = yield cursor.current();
+
       if (item) {
         expect(item.Name).to.be.ok();
       }
-      done();
+
     });
   });
 
-  it('close should ok', function (done) {
+  it('close should ok', function* () {
     expect(cursor.isClosed).to.be(false);
     cursor.close(function (err) {
-      expect(err).not.to.be.ok();
+
       expect(cursor.conn).not.to.be.ok();
-      done();
+
     });
   });
 
-  it('current after closed should not ok', function (done) {
+  it('current after closed should not ok', function* () {
     expect(cursor.isClosed).to.be(true);
     cursor.current(function (err) {
       expect(err).to.be.ok();
       expect(err.message).to.be('Context is closed');
-      done();
+
     });
   });
 
-  it('next after closed should not ok', function (done) {
+  it('next after closed should not ok', function* () {
     expect(cursor.isClosed).to.be(true);
     cursor.next(function (err) {
       expect(err).to.be.ok();
       expect(err.message).to.be('Context is closed');
-      done();
+
     });
   });
 });

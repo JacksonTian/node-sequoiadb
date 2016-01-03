@@ -24,48 +24,48 @@ describe('Domain Actions', function () {
   var domainName = 'domain_name';
   var domain;
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(function () {
       client.createDomain(domainName, {Groups:['data']}, function (err, _domain) {
-        expect(err).not.to.be.ok();
+
         expect(_domain).to.be.ok();
         expect(_domain.name).to.be(domainName);
         domain = _domain;
-        done();
+
       });
     });
   });
 
-  after(function (done) {
+  after(function* () {
     client.dropDomain(domainName, function (err, domain) {
-      expect(err).not.to.be.ok();
+
       client.disconnect(done);
     });
   });
 
-  it('getCollectionSpaces should ok', function (done) {
+  it('getCollectionSpaces should ok', function* () {
     domain.getCollectionSpaces(function (err, cursor) {
-      expect(err).not.to.be.ok();
+
       expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+      var item = yield cursor.current();
+
         expect(item).to.be(null);
-        done();
+
       });
     });
   });
 
   describe('CollectionSpace with domain', function () {
     var _space;
-    it('alter to data group should ok', function (done) {
+    it('alter to data group should ok', function* () {
       var options = {
         "Groups": [ "data" ],
         "AutoSplit": true
       };
       domain.alter(options, function (err) {
-        expect(err).not.to.be.ok();
-        done();
+
+
       });
     });
 
@@ -75,93 +75,93 @@ describe('Domain Actions', function () {
       }).to.throwError(/Invalid Argument/);
     });
 
-    it('createCollectionSpace', function (done) {
+    it('createCollectionSpace', function* () {
       var options = {'Domain': domainName};
       client.createCollectionSpace('space', options, function (err, space) {
-        expect(err).not.to.be.ok();
+
         expect(space).to.be.ok();
         _space = space;
-        done();
+
       });
     });
 
-    it('getCollectionSpaces should ok', function (done) {
+    it('getCollectionSpaces should ok', function* () {
       domain.getCollectionSpaces(function (err, cursor) {
-        expect(err).not.to.be.ok();
+
         expect(cursor).to.be.ok();
-        cursor.current(function (err, item) {
-          expect(err).not.to.be.ok();
+        var item = yield cursor.current();
+
           expect(item.Name).to.be('space');
-          done();
+
         });
       });
     });
 
-    it('createCollection should ok', function (done) {
+    it('createCollection should ok', function* () {
       var opts = {
         "ShardingKey": {a: 1},
         "ShardingType": "hash",
         "AutoSplit": true
       };
       _space.createCollection('cl', opts, function (err, cl) {
-        expect(err).not.to.be.ok();
+
         expect(cl).to.be.ok();
         //expect(cl.Name).to.be('space.cl');
-        done();
+
       });
     });
 
-    it('getCollections should ok', function (done) {
+    it('getCollections should ok', function* () {
       domain.getCollections(function (err, cursor) {
-        expect(err).not.to.be.ok();
+
         expect(cursor).to.be.ok();
-        cursor.current(function (err, item) {
-          expect(err).not.to.be.ok();
+        var item = yield cursor.current();
+
           expect(item.Name).to.be('space.cl');
-          done();
+
         });
       });
     });
 
-    it('dropCollectionSpace should ok', function (done) {
+    it('dropCollectionSpace should ok', function* () {
       client.dropCollectionSpace('space', function (err) {
-        expect(err).not.to.be.ok();
-        done();
+
+
       });
     });
   });
 
-  it('getCollections should ok', function (done) {
+  it('getCollections should ok', function* () {
     domain.getCollections(function (err, cursor) {
-      expect(err).not.to.be.ok();
+
       expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+      var item = yield cursor.current();
+
         expect(item).to.be(null);
-        done();
+
       });
     });
   });
 
-  it('alter should ok', function (done) {
+  it('alter should ok', function* () {
     var options = {
       "Groups": [ "group1", "group2", "group3" ],
       "AutoSplit": true
     };
     domain.alter(options, function (err) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 
-  it('alter reset should ok', function(done){
+  it('alter reset should ok', function* (){
    var options = {
       "Groups": [],
       "AutoSplit": false
     };
     domain.alter(options, function (err) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 });

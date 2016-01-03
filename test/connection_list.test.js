@@ -24,71 +24,44 @@ describe('Connection List', function () {
   var spaceName = 'spaceName' + Math.floor(Math.random() * 100);
   var collectionName = 'test_coll';
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(function () {
-      client.createCollectionSpace(spaceName, function (err, space) {
-        expect(err).not.to.be.ok();
-        expect(space.name).to.be(spaceName);
-        space.createCollection(collectionName, function (err, collection) {
-          expect(err).not.to.be.ok();
-          done();
-        });
-      });
-    });
+    yield client.ready();
+    var space = yield client.createCollectionSpace(spaceName);
+    expect(space.name).to.be(spaceName);
+    yield space.createCollection(collectionName);
   });
 
-  after(function (done) {
-    client.dropCollectionSpace(spaceName, function (err) {
-      expect(err).not.to.be.ok();
-      client.disconnect(done);
-    });
+  after(function* () {
+    yield client.dropCollectionSpace(spaceName);
+    yield client.disconnect();
   });
 
-  it('getCollectionSpaces should ok', function (done) {
-    client.getCollectionSpaces(function (err, cursor) {
-      expect(err).to.not.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        expect(item).to.be.ok();
-        done();
-      });
-    });
+  it('getCollectionSpaces should ok', function* () {
+    var cursor = yield client.getCollectionSpaces();
+    var item = yield cursor.current();
+    expect(item).to.be.ok();
   });
 
-  it('getCollectionSpaceNames should ok', function (done) {
-    client.getCollectionSpaceNames(function (err, names) {
-      expect(err).to.not.be.ok();
-      //expect(names.length).to.be(1);
-      expect(names.length).to.be.above(0);
-      done();
-    });
+  it('getCollectionSpaceNames should ok', function* () {
+    var names = yield client.getCollectionSpaceNames();
+    //expect(names.length).to.be(1);
+    expect(names.length).to.be.above(0);
   });
 
-  it('getCollections should ok', function (done) {
-    client.getCollections(function (err, cursor) {
-      expect(err).to.not.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).to.not.be.ok();
-        expect(item.Name).to.be.ok();
-        done();
-      });
-    });
+  it('getCollections should ok', function* () {
+    var cursor = yield client.getCollections();
+    var item = yield cursor.current();
+    expect(item.Name).to.be.ok();
   });
 
-  it('getCollectionNames should ok', function (done) {
-    client.getCollectionNames(function (err, names) {
-      expect(err).to.not.be.ok();
-      expect(names.length).to.be.above(0);
-      done();
-    });
+  it('getCollectionNames should ok', function* () {
+    var names = yield client.getCollectionNames();
+    expect(names.length).to.be.above(0);
   });
 
-  it('getStorageUnits should ok', function (done) {
-    client.getStorageUnits(function (err, names) {
-      expect(err).to.not.be.ok();
-      expect(names.length).to.be(0);
-      done();
-    });
+  it('getStorageUnits should ok', function* () {
+    var names = yield client.getStorageUnits();
+    expect(names.length).to.be(0);
   });
 });

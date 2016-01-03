@@ -23,179 +23,130 @@ var Node = require('../lib/node');
 
 describe('Collection split', function () {
   var client = common.createClient();
-  var _collection;
-  var _space;
+  var collection;
+  var space;
 
   var srcGroup;
   var dstGroup;
 
   var spaceName = 'foo5';
-  var collectionName = "bar5";
+  var collectionName = 'bar5';
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
-    client.ready(done);
+    yield client.ready();
   });
 
-  after(function (done) {
-    client.disconnect(done);
+  after(function* () {
+    yield client.dropCollectionSpace(spaceName);
+    yield client.disconnect();
   });
 
-  it('create collection space should ok', function(done){
-    client.createCollectionSpace(spaceName, function (err, space) {
-      expect(err).not.to.be.ok();
-      expect(space).not.to.be(null);
-      expect(space.name).to.be(spaceName);
-      _space = space;
-      done();
-    });
+  it('create collection space should ok', function* (){
+    space = yield common.ensureCollectionSpace(client, spaceName);
+    expect(space).not.to.be(null);
+    expect(space.name).to.be(spaceName);
   });
 
-  it('create source group should ok', function (done) {
-    client.createReplicaGroup("source", function (err, group) {
-      expect(err).not.to.be.ok();
-      expect(group).not.to.be(null);
-      srcGroup = group;
-      done();
-    });
+  it('create source group should ok', function* () {
+    srcGroup = yield client.createReplicaGroup('source');
+    expect(srcGroup).not.to.be(null);
   });
 
-  it('source group create node should ok', function (done) {
+  it('source group create node should ok', function* () {
     this.timeout(8000);
     var host = common.ip;
     var port = 22000;
     var dbpath = common.dbpath + 'data/22000';
-    srcGroup.createNode(host, port, dbpath, {}, function (err, _) {
-      expect(err).not.to.be.ok();
-      expect(_).to.be.a(Node);
-      done();
-    });
+    var node = yield srcGroup.createNode(host, port, dbpath, {});
+    expect(node).to.be.a(Node);
   });
 
-  it('activate source group should ok', function (done) {
+  it('activate source group should ok', function* () {
     this.timeout(20000);
-    client.activateReplicaGroup('source', function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.activateReplicaGroup('source');
   });
 
-  it('create collection on source group should ok', function(done){
-    var options = {ShardingKey: {"age": 1}, ShardingType: "hash", Partition: 4096, Group:"source"};
-    _space.createCollection(collectionName, options, function (err, collection) {
-      expect(err).not.to.be.ok();
-      expect(collection).to.be.a(Collection);
-      _collection = collection;
-      done();
-    });
+  it('create collection on source group should ok', function* (){
+    var options = {
+      ShardingKey: {'age': 1},
+      ShardingType: 'hash',
+      Partition: 4096,
+      Group: 'source'
+    };
+    collection = yield space.createCollection(collectionName, options);
+    expect(collection).to.be.a(Collection);
   });
 
-  it('create dest group should ok', function(done){
-    client.createReplicaGroup("dest", function(err, group){
-      expect(err).not.to.be.ok();
-      expect(group).not.to.be(null);
-      dstGroup = group;
-      done();
-    });
+  it('create dest group should ok', function* (){
+    dstGroup = yield client.createReplicaGroup('dest');
+    expect(dstGroup).not.to.be(null);
   });
 
-  it('create node for dest group should ok', function (done) {
+  it('create node for dest group should ok', function* () {
     this.timeout(8000);
     var host = common.ip;
     var port = 22010;
     var dbpath = common.dbpath + 'data/22010';
-    dstGroup.createNode(host, port, dbpath, {}, function(err, _){
-      expect(err).not.to.be.ok();
-      expect(_).to.be.a(Node);
-      done();
-    });
+    var node = yield dstGroup.createNode(host, port, dbpath, {});
+    expect(node).to.be.a(Node);
   });
 
-  it('wait for 10s', function(done) {
+  it('wait for 10s', function* () {
     this.timeout(11000);
-    setTimeout(function () {
-      done();
-    }, 10000);
+    yield common.sleep(10000);
   });
 
-  it('activate dest group should ok', function (done) {
+  it('activate dest group should ok', function* () {
     this.timeout(20000);
-    client.activateReplicaGroup('dest', function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.activateReplicaGroup('dest');
   });
 
-  it('split should ok', function (done) {
+  it('split should ok', function* () {
     this.timeout(8000);
     var splitCondition = {age: 30};
     var splitEndCondition = {age: 60};
-    _collection.split('source', 'dest', splitCondition, splitEndCondition, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield collection.split('source', 'dest', splitCondition, splitEndCondition);
   });
 
-  it('wait for 10s', function(done) {
+  it('wait for 10s', function* () {
     this.timeout(11000);
-    setTimeout(function () {
-      done();
-    }, 10000);
+    yield common.sleep(10000);
   });
 
-  it('splitByPercent should ok', function (done) {
+  it('splitByPercent should ok', function* () {
     this.timeout(8000);
-    _collection.splitByPercent('source', 'dest', 50, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield collection.splitByPercent('source', 'dest', 50);
   });
 
-  it('wait for 10s', function(done) {
+  it('wait for 10s', function* () {
     this.timeout(11000);
-    setTimeout(function () {
-      done();
-    }, 10000);
+    yield common.sleep(10000);
   });
 
-  it('splitAsync should ok', function (done) {
+  it('splitAsync should ok', function* () {
     this.timeout(8000);
     var splitCondition = {age: 10};
     var splitEndCondition = {age: 30};
-    _collection.splitAsync('source', 'dest', splitCondition, splitEndCondition, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield collection.splitAsync('source', 'dest', splitCondition, splitEndCondition);
   });
 
-  it('splitByPercentAsync should ok', function (done) {
+  it('splitByPercentAsync should ok', function* () {
     this.timeout(8000);
-    _collection.splitByPercentAsync('source', 'dest', 50, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield collection.splitByPercentAsync('source', 'dest', 50);
   });
 
-  it('drop collection space should ok', function (done) {
-    client.dropCollectionSpace(spaceName, function (err) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+  it('drop collection space should ok', function* () {
+    yield client.dropCollectionSpace(spaceName);
   });
 
-  it('remove source group should ok', function (done) {
+  it('remove source group should ok', function* () {
     this.timeout(10000);
-    client.removeReplicaGroup('source', function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.removeReplicaGroup('source');
   });
 
-  it('remove dest group should ok', function (done) {
+  it('remove dest group should ok', function* () {
     this.timeout(10000);
-    client.removeReplicaGroup('dest', function (err, _) {
-      expect(err).not.to.be.ok();
-      done();
-    });
+    yield client.removeReplicaGroup('dest');
   });
 });

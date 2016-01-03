@@ -22,60 +22,60 @@ var common = require('./common');
 describe('Domain', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(done);
   });
 
-  after(function (done) {
+  after(function* () {
     client.disconnect(done);
   });
 
-  it('getDomains should ok', function (done) {
+  it('getDomains should ok', function* () {
     client.getDomains(null, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
+
       expect(cursor).to.be.ok();
-      done();
+
     });
   });
 
-  it('isDomainExist should ok', function (done) {
+  it('isDomainExist should ok', function* () {
     client.isDomainExist('inexist', function (err, exist) {
-      expect(err).not.to.be.ok();
+
       expect(exist).to.be(false);
-      done();
+
     });
   });
 
-  it('getDomain should ok', function (done) {
+  it('getDomain should ok', function* () {
     client.getDomain('inexist', function (err, domain) {
-      expect(err).not.to.be.ok();
+
       expect(domain).to.be(null);
-      done();
+
     });
   });
 
-  it('createDomain should ok', function (done) {
+  it('createDomain should ok', function* () {
     client.createDomain('mydomain', function (err, domain) {
-      expect(err).not.to.be.ok();
+
       expect(domain).to.be.ok();
       expect(domain.name).to.be('mydomain');
-      done();
+
     });
   });
 
-  it('getDomain should ok with exist', function (done) {
+  it('getDomain should ok with exist', function* () {
     client.getDomain('mydomain', function (err, domain) {
-      expect(err).not.to.be.ok();
+
       expect(domain.name).to.be('mydomain');
-      done();
+
     });
   });
 
-  it('dropDomain should ok', function (done) {
+  it('dropDomain should ok', function* () {
     client.dropDomain('mydomain', function (err, domain) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 });

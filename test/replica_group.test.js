@@ -22,62 +22,62 @@ var common = require('./common');
 describe('Replica Group', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(done);
   });
 
-  after(function (done) {
+  after(function* () {
     client.disconnect(done);
   });
 
-  it('getReplicaGroups should ok', function (done) {
+  it('getReplicaGroups should ok', function* () {
     client.getReplicaGroups(function (err, cursor) {
-      expect(err).not.to.be.ok();
+
       expect(cursor).to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+      var item = yield cursor.current();
+
         expect(item.Group.length).to.above(0);
         expect(item.GroupID).to.be(1);
         expect(item.GroupName).to.be('SYSCatalogGroup');
-        done();
+
       });
     });
   });
 
-  it('getReplicaGroupById should ok', function (done) {
+  it('getReplicaGroupById should ok', function* () {
     client.getReplicaGroupById(1, function (err, group) {
-      expect(err).not.to.be.ok();
+
       expect(group).to.be.ok();
       expect(group.isCatalog).to.be(true);
       expect(group.groupId).to.be(1);
       expect(group.name).to.be('SYSCatalogGroup');
-      done();
+
     });
   });
 
-  it('getReplicaGroupByName should ok', function (done) {
+  it('getReplicaGroupByName should ok', function* () {
     client.getReplicaGroupByName('SYSCatalogGroup', function (err, group) {
-      expect(err).not.to.be.ok();
+
       expect(group).to.be.ok();
       expect(group.isCatalog).to.be(true);
       expect(group.groupId).to.be(1);
       expect(group.name).to.be('SYSCatalogGroup');
-      done();
+
     });
   });
 
-  it('createReplicaGroup should ok', function (done) {
+  it('createReplicaGroup should ok', function* () {
     client.createReplicaGroup('group5', function (err, group) {
-      expect(err).not.to.be.ok();
+
       expect(group).to.be.ok();
       expect(group.isCatalog).to.be(false);
       expect(group.name).to.be('group5');
-      done();
+
     });
   });
 
-  it('createReplicaCataGroup should ok', function (done) {
+  it('createReplicaCataGroup should ok', function* () {
     this.timeout(8000);
     var host = common.ip;
     var port = 11810;
@@ -85,22 +85,22 @@ describe('Replica Group', function () {
     client.createReplicaCataGroup(host, port, dbpath, null, function (err) {
       expect(err).to.be.ok();
       expect(err.message).to.be("Unable to create new catalog when there's already one exists");
-      done();
+
     });
   });
 
-  it('activateReplicaGroup should ok', function (done) {
+  it('activateReplicaGroup should ok', function* () {
     client.activateReplicaGroup('group5', function (err, group) {
-      expect(err).not.to.be.ok();
+
       // expect(group).to.be.ok();
-      done();
+
     });
   });
 
-  it('removeReplicaGroup should ok', function (done) {
+  it('removeReplicaGroup should ok', function* () {
     client.removeReplicaGroup('group5', function (err, group) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 });

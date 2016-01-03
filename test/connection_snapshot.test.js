@@ -23,115 +23,115 @@ var constants = require('../lib/const');
 describe('Collection Snapshot', function () {
   var client = common.createClient();
 
-  before(function (done) {
+  before(function* () {
     this.timeout(8000);
     client.ready(done);
   });
 
-  after(function (done) {
+  after(function* () {
     client.disconnect(done);
   });
 
-  it("getSnapshot(SDB_SNAP_CONTEXTS) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_CONTEXTS) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_CONTEXTS, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_CONTEXTS_CURRENT) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_CONTEXTS_CURRENT) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_CONTEXTS_CURRENT, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_SESSIONS) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_SESSIONS) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_SESSIONS, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_SESSIONS_CURRENT) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_SESSIONS_CURRENT) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_SESSIONS_CURRENT, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_COLLECTIONS) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_COLLECTIONS) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_COLLECTIONS, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         //expect(item).to.be.ok(); // item will be null if no collection in db
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_COLLECTIONSPACES) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_COLLECTIONSPACES) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_COLLECTIONSPACES, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         //expect(item).to.be.ok(); // item will be null if no collection space in db
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_DATABASE) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_DATABASE) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_DATABASE, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("getSnapshot(SDB_SNAP_SYSTEM) should ok", function (done) {
+  it("getSnapshot(SDB_SNAP_SYSTEM) should ok", function* () {
     client.getSnapshot(constants.SDB_SNAP_SYSTEM, null, null, null, function (err, cursor) {
-      expect(err).not.to.be.ok();
-      cursor.current(function (err, item) {
-        expect(err).not.to.be.ok();
+
+      var item = yield cursor.current();
+
         expect(item).to.be.ok();
-        done();
+
       });
     });
   });
 
-  it("resetSnapshot should ok", function (done) {
+  it("resetSnapshot should ok", function* () {
     client.resetSnapshot(function (err) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 
-  it('flushConfigure should ok', function (done) {
+  it('flushConfigure should ok', function* () {
     var matcher = {"Global":false};
     client.flushConfigure(matcher, function (err) {
-      expect(err).not.to.be.ok();
-      done();
+
+
     });
   });
 });
